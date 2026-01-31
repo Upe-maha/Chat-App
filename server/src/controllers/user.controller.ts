@@ -99,6 +99,9 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
     })
 })
 
+
+// Operation to delete the user
+
 export const deletUser = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
