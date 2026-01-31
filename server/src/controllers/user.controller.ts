@@ -62,3 +62,18 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
         data: user,
     });
 });
+
+export const updateUser = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { username, email } = req.body;
+
+    if (!id) {
+        throw new ApiError(400, "User ID is required");
+    }
+    const user = await User.findById(id);
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    if (email && email !== user.email)
+})
