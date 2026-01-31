@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import asyncHandler from "../utils/asyncHandler";
 import User from "../models/User";
 import ApiError from "../utils/ApiError";
+import { hashPassword } from "../utils/hashPassword";
 
 
 // Create a new user
@@ -17,10 +18,12 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
         throw new ApiError(409, "User with this email already exists");
     }
 
+    const hashedPassword = await hashPassword(password);
+
     const user = await User.create({
         username,
         email,
-        password,
+        password: hashedPassword,
     })
 
     // Remove password from response
