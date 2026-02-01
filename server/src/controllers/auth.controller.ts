@@ -3,7 +3,7 @@ import User from "../models/User";
 import asyncHandler from "../utils/asyncHandler";
 import ApiError from "../utils/ApiError";
 import { hashPassword, comparePassword } from "../utils/hashPassword";
-import { generateToekns } from "../utils/jwt";
+import { generateAccessToken, generateToekns, verifyRefreshToken } from "../utils/jwt";
 
 export const registerUser = asyncHandler(async (req: Request, res: Response) => {
     const { username, email, password } = req.body;
@@ -58,6 +58,13 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
         username: user.username,
     })
 
+    res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
     const userResponse = user.toObject();
     const { password: _, ...userWithoutPassword } = userResponse;
 
@@ -69,3 +76,22 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
         data: userWithoutPassword,
     });
 });
+
+export const refreshToken = asyncHandler(async (req: Request, res: Response) => {
+    const refreshToken = req.cookies?.refreshToken;
+
+    if (!refreshToken) {
+        throw new ApiError(401, "Refresh token not provided");
+    }
+    const payload = verifyRefreshToken(refreshToken);
+
+    const accessToken = generateAccessToken({
+        id: payload.id,
+        email: payload.email,
+        username: payload.username,
+    });
+    res.status(200).json({
+        success: true,
+        accessToken,
+    });
+})

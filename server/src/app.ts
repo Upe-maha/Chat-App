@@ -1,4 +1,5 @@
 import express, { Express } from "express";
+import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/error.middleware";
 import userRoutes from "./routes/user.routes";
 import authRoutes from "./routes/auth.routes";
@@ -8,6 +9,7 @@ const app: Express = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Routes
 app.get("/", (req: express.Request, res: express.Response) => {
