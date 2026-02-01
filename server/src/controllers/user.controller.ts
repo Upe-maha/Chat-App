@@ -2,40 +2,40 @@ import { Request, Response } from "express";
 import asyncHandler from "../utils/asyncHandler";
 import User from "../models/User";
 import ApiError from "../utils/ApiError";
-import { hashPassword } from "../utils/hashPassword";
 
 
-// Create a new user
-export const createUser = asyncHandler(async (req: Request, res: Response) => {
-    const { username, email, password } = req.body;
 
-    if (!username || !email || !password) {
-        throw new ApiError(400, "Name, email and password are required")
-    }
+// // Create a new user
+// export const createUser = asyncHandler(async (req: Request, res: Response) => {
+//     const { username, email, password } = req.body;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-        throw new ApiError(409, "User with this email already exists");
-    }
+//     if (!username || !email || !password) {
+//         throw new ApiError(400, "Name, email and password are required")
+//     }
 
-    const hashedPassword = await hashPassword(password);
+//     const existingUser = await User.findOne({ email });
+//     if (existingUser) {
+//         throw new ApiError(409, "User with this email already exists");
+//     }
 
-    const user = await User.create({
-        username,
-        email,
-        password: hashedPassword,
-    })
+//     const hashedPassword = await hashPassword(password);
 
-    // Remove password from response
-    const userResponse = user.toObject();
-    const { password: _, ...userWithoutPassword } = userResponse;
+//     const user = await User.create({
+//         username,
+//         email,
+//         password: hashedPassword,
+//     })
 
-    res.status(201).json({
-        success: true,
-        message: "User created successfully",
-        data: userWithoutPassword,
-    });
-})
+//     // Remove password from response
+//     const userResponse = user.toObject();
+//     const { password: _, ...userWithoutPassword } = userResponse;
+
+//     res.status(201).json({
+//         success: true,
+//         message: "User created successfully",
+//         data: userWithoutPassword,
+//     });
+// })
 
 
 
