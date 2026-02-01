@@ -3,6 +3,7 @@ import User from "../models/User";
 import asyncHandler from "../utils/asyncHandler";
 import ApiError from "../utils/ApiError";
 import { hashPassword, comparePassword } from "../utils/hashPassword";
+import { generateToekns } from "../utils/jwt";
 
 export const registerUser = asyncHandler(async (req: Request, res: Response) => {
     const { username, email, password } = req.body;
@@ -51,12 +52,20 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
         throw new ApiError(401, "Invalid email or password");
     }
 
+    const { accessToken, refreshToken } = generateToekns({
+        id: user._id.toString(),
+        email: user.email,
+        username: user.username,
+    })
+
     const userResponse = user.toObject();
     const { password: _, ...userWithoutPassword } = userResponse;
 
     res.status(200).json({
         success: true,
         message: "Login successful",
+        accessToken,
+        refreshToken,
         data: userWithoutPassword,
     });
 });
