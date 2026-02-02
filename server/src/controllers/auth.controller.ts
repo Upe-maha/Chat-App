@@ -3,8 +3,9 @@ import User from "../models/User";
 import asyncHandler from "../utils/asyncHandler";
 import ApiError from "../utils/ApiError";
 import { hashPassword, comparePassword } from "../utils/hashPassword";
-import { generateAccessToken, generateToekns, verifyRefreshToken } from "../utils/jwt";
+import { generateAccessToken, generateTokens, verifyRefreshToken } from "../utils/jwt";
 
+// user registration || creation
 export const registerUser = asyncHandler(async (req: Request, res: Response) => {
     const { username, email, password } = req.body;
 
@@ -35,6 +36,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response) => 
     });
 });
 
+// user login
 export const loginUser = asyncHandler(async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
@@ -52,7 +54,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
         throw new ApiError(401, "Invalid email or password");
     }
 
-    const { accessToken, refreshToken } = generateToekns({
+    const { accessToken, refreshToken } = generateTokens({
         id: user._id.toString(),
         email: user.email,
         username: user.username,
@@ -72,11 +74,11 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
         success: true,
         message: "Login successful",
         accessToken,
-        refreshToken,
         data: userWithoutPassword,
     });
 });
 
+// accessToken generation using refresh token
 export const refreshToken = asyncHandler(async (req: Request, res: Response) => {
     const refreshToken = req.cookies?.refreshToken;
 
@@ -95,3 +97,16 @@ export const refreshToken = asyncHandler(async (req: Request, res: Response) => 
         accessToken,
     });
 })
+
+export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
+    res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+    });
+
+    res.status(200).json({
+        success: true,
+        message: "Logged out successfully",
+    })
+});

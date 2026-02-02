@@ -25,7 +25,7 @@ export const generateRefreshToken = (payload: TokenPayload): string => {
     return token;
 }
 
-export const generateToekns = (payload: TokenPayload): TokenResponse => {
+export const generateTokens = (payload: TokenPayload): TokenResponse => {
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
     return { accessToken, refreshToken };
