@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/error.middleware";
 import userRoutes from "./routes/user.routes";
 import authRoutes from "./routes/auth.routes";
+import chatRoutes from "./routes/chat.routes";
 
 const app: Express = express();
 
@@ -25,6 +26,8 @@ app.get("/health", (req: express.Request, res: express.Response) => {
 app.use("/api/users", userRoutes);
 
 app.use("/api/auth", authRoutes);
+
+app.use("/api/chats", chatRoutes);
 
 // 404 handler
 app.use((req: express.Request, res: express.Response) => {

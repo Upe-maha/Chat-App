@@ -1,4 +1,4 @@
-import Chat from "../models/chat";
+import Chat from "../models/Chat";
 import ApiError from "../utils/ApiError";
 import asyncHandler from "../utils/asyncHandler";
 import { Request, Response } from "express";
