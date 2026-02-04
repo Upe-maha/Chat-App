@@ -1,7 +1,7 @@
 import express from "express";
 import { Request, Response } from "express";
 import asyncHandler from "../utils/asyncHandler";
-import Message from "../models/message";
+import Message from "../models/Message";
 import ApiError from "../utils/ApiError";
 import Chat from "../models/Chat";
 import mongoose from "mongoose";

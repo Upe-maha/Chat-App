@@ -4,6 +4,7 @@ import { errorHandler } from "./middlewares/error.middleware";
 import userRoutes from "./routes/user.routes";
 import authRoutes from "./routes/auth.routes";
 import chatRoutes from "./routes/chat.routes";
+import messageRoutes from "./routes/message.routes";
 
 const app: Express = express();
 
@@ -28,6 +29,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 
 app.use("/api/chats", chatRoutes);
+
+app.use("/api/messages", messageRoutes);
 
 // 404 handler
 app.use((req: express.Request, res: express.Response) => {
