@@ -89,3 +89,40 @@ export const deleteMessage = asyncHandler(async (req: Request, res: Response) =>
         message: "Message deleted successfully",
     });
 });
+
+
+// Update message content before 30 seconds of sending
+export const updateMessage = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { content } = req.body;
+    const userId = req.user?.id;
+
+    const message = await Message.findById(id);
+    if (!message) {
+        throw new ApiError(404, "Message not found");
+    }
+
+    if (!message.senderId.equals(userId)) {
+        throw new ApiError(403, "You can only update your own messages")
+    }
+
+    // for time constraint of max 30 seconds
+    const now = new Date();
+    const createdTime = new Date(message.createdAt);
+    const diffInSeconds = (now.getTime() - createdTime.getTime() / 1000);
+
+    if (diffInSeconds > 30) {
+        throw new ApiError(400, "You can only update message within 30 seconds of sending it");
+    }
+
+    message.content = content;
+    await message.save();
+
+    const populatedUpdatedMessage = await message.populate("senderId", "username email");
+
+    res.status(200).json({
+        success: true,
+        message: "Message update successfully",
+        data: populatedUpdatedMessage,
+    });
+});
