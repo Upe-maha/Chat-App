@@ -1,0 +1,118 @@
+import mongoose from "mongoose";
+import { getGridFSBucket } from "../config/gridfs";
+import ApiError from "../utils/ApiError";
+import asyncHandler from "../utils/asyncHandler";
+import { Request, Response } from "express";
+import { Readable } from "stream";
+
+// export const uploadFile = asyncHandler(async (req: Request, res: Response) => {
+//     if (!req.file) {
+//         throw new ApiError(400, "No file uploaded.");
+//     }
+
+//     const bucket = getGridFSBucket();
+
+//     const { originalname, mimetype, buffer } = req.file;
+
+//     const uploadStream = bucket.openUploadStream(originalname, {
+//         metadata: {
+//             contentType: mimetype,
+//             uploadedBy: req.user?.id,
+//             uploadDate: new Date(),
+//         }
+//     })
+
+//     const readable = Readable.from(buffer); //turns buffer into a stream
+//     readable.pipe(uploadStream);
+
+//     // streaming is async, Stream emit events "error", 'finish', 'close'
+//     uploadStream.on('error', (err) => {
+//         console.error("Erroruploading file:", err);
+//         throw new ApiError(500, "Error uploading file");
+//     });
+
+
+// });
+
+// better way using promises 
+export const uploadFile = asyncHandler(async (req: Request, res: Response) => {
+    if (!req.file) {
+        throw new ApiError(400, "No file uploaded.");
+    }
+
+    const bucket = getGridFSBucket();
+
+    const { originalname, mimetype, buffer } = req.file;
+
+    try {
+        const fileId = await new Promise<string>((resolve, reject) => {
+            const uploadStream = bucket.openUploadStream(originalname, {
+                metadata: {
+                    contentType: mimetype,
+                    uploadedBy: req.user?.id,
+                    uploadDate: new Date(),
+                },
+            });
+            const readable = Readable.from(buffer);//Converting the buffer into a readable stream
+            readable.pipe(uploadStream);
+
+            uploadStream.on("finish", () => {
+                resolve(uploadStream.id.toString());
+            });
+
+            uploadStream.on("error", (err) => {
+                console.error("Error uploading file:", err);
+                reject(err);
+            });
+        });
+
+        // send the message for sucess
+        res.status(201).json({
+            sucess: true,
+            message: "File uploaded successfully",
+            data: {
+                fileId,
+                filiname: originalname,
+                contentType: mimetype,
+                size: req.file?.size,
+            },
+        });
+    } catch (error) {
+        throw new ApiError(500, "Error uploading file");
+    }
+});
+
+export const streamFile = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const bucket = getGridFSBucket();
+
+
+    if (!id) {
+        throw new ApiError(400, "File ID is required");
+    }
+
+    const fileId = Array.isArray(id) ? id[0] : id; // Handle case where id might be an array
+
+
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+        throw new ApiError(400, "Invalid file ID");
+    }
+
+    try {
+        const objectId = new mongoose.Types.ObjectId(fileId);
+        // const cursor= bucket.find({ _id: objectId })
+        // const file = await cursor.toArray();
+        const files = await bucket.find({ _id: objectId }).toArray();
+
+        if (!files || files.length === 0) {
+            throw new ApiError(404, "File nor found");
+        }
+
+        const file = files[0];
+        const fileSize = file.length;
+        const rage = req.headers.range;
+
+    } catch (error) {
+
+    };
+})

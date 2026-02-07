@@ -5,6 +5,7 @@ export interface IMessage extends Document {
     senderId: mongoose.Types.ObjectId;
     content: string;
     messageType: "text" | "image" | "video" | "audio" | "file";
+    fileId?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -30,6 +31,9 @@ const messageSchema = new Schema<IMessage>({
         enum: ["text", "image", "video", "audio", "file"],
         default: "text"
     },
+    fileId: {
+        type: String,
+    }
 }, { timestamps: true });
 
 
