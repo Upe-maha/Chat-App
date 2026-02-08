@@ -4,6 +4,8 @@ import ApiError from "../utils/ApiError";
 import asyncHandler from "../utils/asyncHandler";
 import { Request, Response } from "express";
 import { Readable } from "stream";
+import { resolve } from "dns";
+import { rejects } from "assert";
 
 // export const uploadFile = asyncHandler(async (req: Request, res: Response) => {
 //     if (!req.file) {
@@ -93,7 +95,6 @@ export const streamFile = asyncHandler(async (req: Request, res: Response) => {
 
     const fileId = Array.isArray(id) ? id[0] : id; // Handle case where id might be an array
 
-
     if (!mongoose.Types.ObjectId.isValid(fileId)) {
         throw new ApiError(400, "Invalid file ID");
     }
@@ -105,14 +106,93 @@ export const streamFile = asyncHandler(async (req: Request, res: Response) => {
         const files = await bucket.find({ _id: objectId }).toArray();
 
         if (!files || files.length === 0) {
-            throw new ApiError(404, "File nor found");
+            throw new ApiError(404, "File not found");
         }
 
         const file = files[0];
         const fileSize = file.length;
-        const rage = req.headers.range;
+        const range = req.headers.range;
 
+        if (range) {
+            const parts = range.replace(/bytes=/, "").split("-");
+            const start = parseInt(parts[0], 10);
+            const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+            const chunkSize = end - start + 1;
+
+            res.status(206);
+            res.set({
+                "Content-Reange": `bytes ${start} - ${end} / ${fileSize}`,
+                "Content-Length": chunkSize,
+                "Content-Type": file.metadata?.contentType || "application/octet-stream",
+            });
+
+            const downloadStream = bucket.openDownloadStream(objectId, {
+                start,
+                end: end + 1,
+            });
+
+            await new Promise<void>((resolve, reject) => {
+                downloadStream.pipe(res);
+                downloadStream.on("error", reject);
+                res.on("error", reject);
+                res.on("finish", resolve);
+            });
+        } else {
+            res.set({
+                "Content-Length": fileSize.toString(),
+                "Content-Type": file.metadata?.contentType || "application/octet-stream",
+                "Content-Disposition": `inline; filename = "${file.filename}"`,
+            });
+
+            const downloadStream = bucket.openDownloadStream(objectId)
+
+            await new Promise<void>((resolve, reject) => {
+                downloadStream.pipe(res);
+                downloadStream.on("error", reject);
+                res.on("error", reject);
+                res.on("finish", resolve);
+            });
+        }
     } catch (error) {
-
+        if (!res.headersSent) {
+            throw new ApiError(500, "Error streaming file");
+        }
     };
+})
+
+
+export const downloadFile = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const bucket = getGridFSBucket();
+
+
+    if (!id) {
+        throw new ApiError(400, "File ID is required");
+    }
+
+    const fileId = Array.isArray(id) ? id[0] : id; // Handle case where id might be an array
+
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+        throw new ApiError(400, "Invalid file ID");
+    }
+
+    try {
+        const objectId = new mongoose.Types.ObjectId(fileId);
+        const files = await bucket.find({ _id: objectId }).toArray();
+
+        if (!files || files.length === 0) {
+            throw new ApiError(404, "File not found");
+        }
+
+        const file = files[0];
+
+        // Force download (attachment vs inline)
+        res.set({
+            "Content-Type": file.metadata?.contentType || "application/octet-stream",
+            "Content-Disposition": `attachment; filename="${file.filename}"`, // ← Forces download
+            "Content-Length": file.length.toString(),
+        });
+
+
+    }
 })
