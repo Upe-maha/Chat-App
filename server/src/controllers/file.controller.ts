@@ -193,6 +193,76 @@ export const downloadFile = asyncHandler(async (req: Request, res: Response) => 
             "Content-Length": file.length.toString(),
         });
 
+        const downloadStream = bucket.openDownloadStream(objectId);
 
+        await new Promise<void>((resolve, reject) => {
+            downloadStream.pipe(res);
+            downloadStream.on("error", reject);
+            res.on("error", reject);
+            res.on("finish", resolve);
+        });
+    } catch (error) {
+        if (!res.headersSent) {
+            throw new ApiError(500, "Error downloading file");
+        }
     }
-})
+});
+
+
+export const getFileMetadata = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const bucket = getGridFSBucket();
+
+    if (!id) {
+        throw new ApiError(400, "File ID is required");
+    }
+
+    const fileId = Array.isArray(id) ? id[0] : id; // Handle case where id might be an array
+
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+        throw new ApiError(400, "Invalid file ID");
+    }
+
+    try {
+        const objectId = new mongoose.Types.ObjectId(fileId);
+        const files = await bucket.find({ _id: objectId }).toArray();
+
+        if (!files || files.length === 0) {
+            throw new ApiError(404, "File not found");
+        }
+
+        const file = files[0];
+
+        res.status(200).json({
+            success: true,
+            data: {
+                fileId: file._id.toString(),
+                filename: file.filename,
+                contentType: file.metadata?.conentType || "application/octet-stream",
+                size: file.length,
+                uploadData: file.uploadDate,
+                metaData: file.metadata,
+            }
+        });
+    } catch (error) {
+        throw new ApiError(500, "Error fetching file metadata");
+    }
+});
+
+
+export const deleteFile = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const userId = req.user?.id;
+    const bucket = getGridFSBucket();
+
+    if (!id) {
+        throw new ApiError(400, "File ID is required");
+    }
+
+    const fileId = Array.isArray(id) ? id[0] : id; // Handle case where id might be an array
+
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+        throw new ApiError(400, "Invalid file ID");
+    }
+
+});
