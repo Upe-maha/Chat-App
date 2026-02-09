@@ -1,10 +1,11 @@
-import express, { Express } from "express";
+import express, { Express, Response, Request } from "express";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/error.middleware";
 import userRoutes from "./routes/user.routes";
 import authRoutes from "./routes/auth.routes";
 import chatRoutes from "./routes/chat.routes";
 import messageRoutes from "./routes/message.routes";
+import fileRoutes from "./routes/file.routes";
 
 const app: Express = express();
 
@@ -14,11 +15,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Routes
-app.get("/", (req: express.Request, res: express.Response) => {
+app.get("/", (req: Request, res: Response) => {
     res.json({ message: "Chat App API", status: "ok" });
 });
 
-app.get("/health", (req: express.Request, res: express.Response) => {
+app.get("/health", (req: Request, res: Response) => {
     res.json({ status: "healthy", timestamp: new Date() });
 });
 
@@ -32,8 +33,10 @@ app.use("/api/chats", chatRoutes);
 
 app.use("/api/messages", messageRoutes);
 
+app.use("/api/files", fileRoutes);
+
 // 404 handler
-app.use((req: express.Request, res: express.Response) => {
+app.use((req: Request, res: Response) => {
     res.status(404).json({ error: "Route not found" });
 });
 
