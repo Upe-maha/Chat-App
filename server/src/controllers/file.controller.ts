@@ -265,4 +265,27 @@ export const deleteFile = asyncHandler(async (req: Request, res: Response) => {
         throw new ApiError(400, "Invalid file ID");
     }
 
+    try {
+        const objectId = new mongoose.Types.ObjectId(fileId);
+        const files = await bucket.find({ _id: objectId }).toArray();
+
+        if (!files || files.length === 0) {
+            throw new ApiError(404, "File not found");
+        }
+
+        const file = files[0];
+
+        if (file.metadata?.uploadedBy.toString() !== userId) {
+            throw new ApiError(403, "You do not have permission to delete this file");
+        }
+
+        await bucket.delete(objectId);
+
+        res.status(200).json({
+            success: true,
+            message: "File deleted successfully",
+        });
+    } catch (error) {
+        throw new ApiError(500, "Error deleting file");
+    }
 });
