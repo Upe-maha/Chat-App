@@ -1,22 +1,33 @@
-import express from "express";
 import { Request, Response } from "express";
 import asyncHandler from "../utils/asyncHandler";
 import Message from "../models/Message";
 import ApiError from "../utils/ApiError";
 import Chat from "../models/Chat";
-import mongoose from "mongoose";
 
 
 export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
-    const { chatId, content, messageType } = req.body;
+    const { chatId, content, messageType, fileId } = req.body;
     const senderId = req.user?.id;
 
     if (!senderId) {
         throw new ApiError(401, "Unauthorized");
     }
 
-    if (!chatId || !content) {
-        throw new ApiError(400, "chatId and content are required")
+    if (!chatId) {
+        throw new ApiError(400, "chatId is required")
+    }
+
+    if (messageType === "text") {
+        if (!content) {
+            throw new ApiError(400, "Content is required for text messages.");
+        }
+    } else if (["image", "video", "audio", "file"].includes(messageType)) {
+        if (!fileId) {
+            throw new ApiError(400, "fileId is required for non-text messages.");
+        }
+        else {
+            throw new ApiError(400, "Invalid message type");
+        }
     }
 
     const chat = await Chat.findById(chatId);
@@ -34,8 +45,9 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
     const message = await Message.create({
         chatId,
         senderId,
-        content,
+        content: content || `File: ${fileId}`,
         messageType: messageType || "text",
+        fileId: fileId || undefined,
     });
 
     const populatedMessage = await message.populate("senderId", "username email");
@@ -62,7 +74,7 @@ export const getChatMessages = asyncHandler(async (req: Request, res: Response) 
 
     const messages = await Message.find({ chatId })
         .populate("senderId", "username email")
-        .sort({ createAt: 1 });
+        .sort({ createdAt: 1 });
 
     res.status(200).json({
         success: true,
@@ -80,7 +92,7 @@ export const deleteMessage = asyncHandler(async (req: Request, res: Response) =>
         throw new ApiError(404, "Message not found");
     }
     if (!message.senderId.equals(userId)) {
-        throw new ApiError(403, "YOu can only delete your own mwssages")
+        throw new ApiError(403, "You can only delete your own messages")
     }
     await Message.findByIdAndDelete(id);
 
@@ -106,10 +118,14 @@ export const updateMessage = asyncHandler(async (req: Request, res: Response) =>
         throw new ApiError(403, "You can only update your own messages")
     }
 
+    if (message.messageType !== "text") {
+        throw new ApiError(400, "Only text messages can be updated");
+    }
+
     // for time constraint of max 30 seconds
     const now = new Date();
     const createdTime = new Date(message.createdAt);
-    const diffInSeconds = (now.getTime() - createdTime.getTime() / 1000);
+    const diffInSeconds = (now.getTime() - createdTime.getTime()) / 1000;
 
     if (diffInSeconds > 30) {
         throw new ApiError(400, "You can only update message within 30 seconds of sending it");
