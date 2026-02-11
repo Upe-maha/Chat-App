@@ -1,0 +1,43 @@
+import Chat from "../models/Chat";
+import Message from "../models/Message";
+import ApiError from "../utils/ApiError";
+
+
+export const createMessage = async (data: {
+    chatId: string;
+    senderId: string;
+    content: string;
+    messageType?: string;
+    fileId?: string;
+}) => {
+    const { chatId, senderId, content, messageType = "text", fileId } = data;
+
+    const chat = await Chat.findOne({
+        _id: chatId,
+        participants: senderId,
+    });
+
+    if (!chat) {
+        throw new ApiError(403, "You are not a participant of this chat");
+    }
+
+    if (messageType === "text" && !content) {
+        throw new ApiError(400, "Content is required for text messages");
+    }
+
+    if (["image", "video", "audio", "file"].includes(messageType) && !fileId) {
+        throw new ApiError(400, "fileId is required for non-text messages");
+    }
+
+    //cteate message
+    const message = await Message.create({
+        chatId,
+        senderId,
+        content: content || `file: ${fileId}`,
+        messageType,
+        fileId: fileId || undefined,
+    })
+    const populatedMessage = await message.populate("senderId", "username email");
+
+    return populatedMessage;
+}

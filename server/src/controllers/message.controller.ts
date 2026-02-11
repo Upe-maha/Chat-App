@@ -3,6 +3,8 @@ import asyncHandler from "../utils/asyncHandler";
 import Message from "../models/Message";
 import ApiError from "../utils/ApiError";
 import Chat from "../models/Chat";
+import { createMessage } from "../services/message.service";
+import { getIo } from "../config/socket";
 
 
 export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
@@ -13,49 +15,65 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
         throw new ApiError(401, "Unauthorized");
     }
 
-    if (!chatId) {
-        throw new ApiError(400, "chatId is required")
-    }
+    // if (!chatId) {
+    //     throw new ApiError(400, "chatId is required")
+    // }
 
-    if (messageType === "text") {
-        if (!content) {
-            throw new ApiError(400, "Content is required for text messages.");
-        }
-    } else if (["image", "video", "audio", "file"].includes(messageType)) {
-        if (!fileId) {
-            throw new ApiError(400, "fileId is required for non-text messages.");
-        }
-        else {
-            throw new ApiError(400, "Invalid message type");
-        }
-    }
+    // if (messageType === "text") {
+    //     if (!content) {
+    //         throw new ApiError(400, "Content is required for text messages.");
+    //     }
+    // } else if (["image", "video", "audio", "file"].includes(messageType)) {
+    //     if (!fileId) {
+    //         throw new ApiError(400, "fileId is required for non-text messages.");
+    //     }
+    //     else {
+    //         throw new ApiError(400, "Invalid message type");
+    //     }
+    // }
 
-    const chat = await Chat.findById(chatId);
-    if (!chat) {
-        throw new ApiError(404, "Chat not found");
-    }
+    // const chat = await Chat.findById(chatId);
+    // if (!chat) {
+    //     throw new ApiError(404, "Chat not found");
+    // }
 
-    // if (!chat.participants.some((p) => p.toString() === senderId)) {
+    // // if (!chat.participants.some((p) => p.toString() === senderId)) {
+    // //     throw new ApiError(403, "You are not a participant of this chat");
+    // // } same but more efficient way is to use "equales()" (MongoDB’s ObjectId has a built-in comparison method)
+    // if (!chat.participants.some((p) => p.equals(senderId))) {
     //     throw new ApiError(403, "You are not a participant of this chat");
-    // } same but more efficient way is to use "equales()" (MongoDB’s ObjectId has a built-in comparison method)
-    if (!chat.participants.some((p) => p.equals(senderId))) {
-        throw new ApiError(403, "You are not a participant of this chat");
-    }
+    // }
 
-    const message = await Message.create({
+    // const message = await Message.create({
+    //     chatId,
+    //     senderId,
+    //     content: content || `File: ${fileId}`,
+    //     messageType: messageType || "text",
+    //     fileId: fileId || undefined,
+    // });
+
+    // const populatedMessage = await message.populate("senderId", "username email");
+
+    const populatedServiceMessage = await createMessage({
         chatId,
         senderId,
-        content: content || `File: ${fileId}`,
-        messageType: messageType || "text",
-        fileId: fileId || undefined,
-    });
+        content,
+        messageType,
+        fileId,
+    })
 
-    const populatedMessage = await message.populate("senderId", "username email");
+    //Emit real time event
+    try {
+        const io = getIo();
+        io.to(chatId).emit("message:new", populatedServiceMessage);
+    } catch (err) {
+        // ignor
+    }
 
     res.status(201).json({
         success: true,
         message: "Message sent successfully",
-        data: populatedMessage,
+        data: populatedServiceMessage,
     })
 })
 
