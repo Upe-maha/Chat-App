@@ -21,7 +21,7 @@ export const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void
         if (!payload) {
             return next(new Error("Unauthorized: Invalid token"));
         }
-        socket.data.usrId = payload?.id;//|| payload?._id || payload?.userId;
+        socket.data.userId = payload?.id;//|| payload?._id || payload?.userId;
         return next();
     }
     catch (err) {

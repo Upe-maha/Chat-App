@@ -15,12 +15,21 @@
     "strict": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "typeRoots": [
+      "./node_modules/@types",
+      "./types"
+    ]
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "types/**/*"
   ],
   "exclude": [
-    "node_modules"
-  ]
+    "node_modules",
+    "dist"
+  ],
+  "ts-node": {
+    "files": true
+  }
 }

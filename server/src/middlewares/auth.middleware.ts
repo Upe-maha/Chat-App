@@ -3,18 +3,19 @@ import asyncHandler from "../utils/asyncHandler";
 import ApiError from "../utils/ApiError";
 import { verifyAccessToken } from "../utils/jwt";
 
-// Extend Express Request to include user
-declare global {
-    namespace Express {
-        interface Request {
-            user?: {
-                id: string;
-                username: string;
-                email: string;
-            };
-        }
-    }
-}
+// Added the src.types (custom TypeScript type definitions for your Express app.)
+// // Extend Express Request to include user
+// declare global {
+//     namespace Express {
+//         interface Request {
+//             user?: {
+//                 id: string;
+//                 username: string;
+//                 email: string;
+//             };
+//         }
+//     }
+// }
 
 export const authMiddleware = asyncHandler(
     async (
