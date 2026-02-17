@@ -2,7 +2,7 @@ import React from "react";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white text-gray-900">
+    <main className="min-h-screen bg-gradient from-blue-50 to-white text-gray-900">
       <header className="border-b bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <span className="text-xl font-bold text-blue-600">ChatApp</span>
