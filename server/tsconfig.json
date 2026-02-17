@@ -18,12 +18,12 @@
     "moduleResolution": "node",
     "typeRoots": [
       "./node_modules/@types",
-      "./types"
+      "src/types"
     ]
   },
   "include": [
     "src/**/*",
-    "types/**/*"
+    // "src/types/**/*"
   ],
   "exclude": [
     "node_modules",
