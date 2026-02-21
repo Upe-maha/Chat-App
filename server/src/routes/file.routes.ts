@@ -1,20 +1,18 @@
 import { Router } from "express";
+import { uploadMiddleware } from "../middlewares/upload.middleware";
+import { deleteFile, downloadFile, streamFile, uploadFile } from "../controllers/file.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
-import { deleteFile, downloadFile, getFileMetadata, streamFile, uploadFile } from "../controllers/file.controller";
-import { upload } from "../config/upload";
 
 const router = Router();
 
-router.use(authMiddleware);
+router.use(authMiddleware); // Protect all file routes
 
-router.post("/upload", upload.single("file"), uploadFile);
+router.post("/upload", uploadMiddleware, uploadFile);
 
-router.get("/stream/:id", streamFile);
+router.get("/download/:filename", downloadFile);
 
-router.get("/download/:id", downloadFile);
+router.get("/stream/:filename", streamFile);
 
-router.get("/metadata/:id", getFileMetadata);
-
-router.delete("/:id", deleteFile);
+router.delete("/delete/:filename", deleteFile);
 
 export default router;
