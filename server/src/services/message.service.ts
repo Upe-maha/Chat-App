@@ -8,9 +8,20 @@ export const createMessage = async (data: {
     senderId: string;
     content: string;
     messageType?: string;
-    fileId?: string;
+    fileUrl?: string;
+    fileName?: string;
+    fileSize?: number;
+    fileMimeType?: string;
 }) => {
-    const { chatId, senderId, content, messageType = "text", fileId } = data;
+    const { chatId,
+        senderId,
+        content,
+        messageType = "text",
+        fileUrl,
+        fileName,
+        fileSize,
+        fileMimeType
+    } = data;
 
     const chat = await Chat.findOne({
         _id: chatId,
@@ -25,17 +36,20 @@ export const createMessage = async (data: {
         throw new ApiError(400, "Content is required for text messages");
     }
 
-    if (["image", "video", "audio", "file"].includes(messageType) && !fileId) {
-        throw new ApiError(400, "fileId is required for non-text messages");
+    if (["image", "video", "audio", "file"].includes(messageType) && !fileUrl) {
+        throw new ApiError(400, "fileUrl is required for non-text messages");
     }
 
     //cteate message
     const message = await Message.create({
         chatId,
         senderId,
-        content: content || `file: ${fileId}`,
+        content: messageType === "text" ? content : (fileName || "File"),
         messageType,
-        fileId: fileId || undefined,
+        fileUrl: fileUrl || undefined,
+        fileName: fileName || undefined,
+        fileSize: fileSize || undefined,
+        fileMimeType: fileMimeType || undefined,
     })
     const populatedMessage = await message.populate("senderId", "username email");
 
