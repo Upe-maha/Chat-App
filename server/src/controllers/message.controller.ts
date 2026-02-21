@@ -8,58 +8,35 @@ import { getIo } from "../config/socket";
 
 
 export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
-    const { chatId, content, messageType, fileId } = req.body;
+    const { chatId, content, messageType, fileUrl, fileName, fileSize, fileMimeType } = req.body;
     const senderId = req.user?.id;
 
     if (!senderId) {
         throw new ApiError(401, "Unauthorized");
     }
 
-    // if (!chatId) {
-    //     throw new ApiError(400, "chatId is required")
-    // }
+    if (!chatId) {
+        throw new ApiError(400, "chatId is required");
+    }
 
-    // if (messageType === "text") {
-    //     if (!content) {
-    //         throw new ApiError(400, "Content is required for text messages.");
-    //     }
-    // } else if (["image", "video", "audio", "file"].includes(messageType)) {
-    //     if (!fileId) {
-    //         throw new ApiError(400, "fileId is required for non-text messages.");
-    //     }
-    //     else {
-    //         throw new ApiError(400, "Invalid message type");
-    //     }
-    // }
+    if (messageType === "text" && (!content || !content.trim())) {
+        throw new ApiError(400, "Message content cannot be empty");
+    }
 
-    // const chat = await Chat.findById(chatId);
-    // if (!chat) {
-    //     throw new ApiError(404, "Chat not found");
-    // }
+    if (["image", "video", "audio", "file"].includes(messageType) && !fileUrl) {
+        throw new ApiError(400, "fileUrl is required for non-text messages");
+    }
 
-    // // if (!chat.participants.some((p) => p.toString() === senderId)) {
-    // //     throw new ApiError(403, "You are not a participant of this chat");
-    // // } same but more efficient way is to use "equales()" (MongoDB’s ObjectId has a built-in comparison method)
-    // if (!chat.participants.some((p) => p.equals(senderId))) {
-    //     throw new ApiError(403, "You are not a participant of this chat");
-    // }
-
-    // const message = await Message.create({
-    //     chatId,
-    //     senderId,
-    //     content: content || `File: ${fileId}`,
-    //     messageType: messageType || "text",
-    //     fileId: fileId || undefined,
-    // });
-
-    // const populatedMessage = await message.populate("senderId", "username email");
-
+    // Create message with file metadata if provided
     const populatedServiceMessage = await createMessage({
         chatId,
         senderId,
         content,
         messageType,
-        fileId,
+        fileUrl,
+        fileName,
+        fileSize,
+        fileMimeType,
     })
 
     //Emit real time event
@@ -67,7 +44,7 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
         const io = getIo();
         io.to(chatId).emit("message:new", populatedServiceMessage);
     } catch (err) {
-        // ignor
+        console.error("Socket emit error:", err);
     }
 
     res.status(201).json({
@@ -81,18 +58,22 @@ export const getChatMessages = asyncHandler(async (req: Request, res: Response) 
     const { chatId } = req.params;
     const userId = req.user?.id;
 
-    const chat = await Chat.findById(chatId);
-    if (!chat) {
-        throw new ApiError(404, "Chat not found");
+    if (!userId) {
+        throw new ApiError(401, "Unauthorized");
     }
 
-    if (!chat.participants.some((p) => p.equals(userId))) {
+    const chat = await Chat.findOne({
+        _id: chatId,
+        participants: userId,
+    });
+
+    if (!chat) {
         throw new ApiError(403, "You are not a participant of this chat");
     }
 
     const messages = await Message.find({ chatId })
         .populate("senderId", "username email")
-        .sort({ createdAt: 1 });
+        .sort({ createdAt: 1 }); // oldest first
 
     res.status(200).json({
         success: true,
@@ -105,6 +86,10 @@ export const deleteMessage = asyncHandler(async (req: Request, res: Response) =>
     const { id } = req.params;
     const userId = req.user?.id;
 
+    if (!userId) {
+        throw new ApiError(401, "Unauthorized");
+    }
+
     const message = await Message.findById(id);
     if (!message) {
         throw new ApiError(404, "Message not found");
@@ -112,7 +97,15 @@ export const deleteMessage = asyncHandler(async (req: Request, res: Response) =>
     if (!message.senderId.equals(userId)) {
         throw new ApiError(403, "You can only delete your own messages")
     }
-    await Message.findByIdAndDelete(id);
+    await message.deleteOne();
+
+    // real time event
+    try {
+        const io = getIo();
+        io.to(message.chatId.toString()).emit("message:deleted", { messageId: id });
+    } catch (err) {
+        console.error("Socket emit error:", err);
+    }
 
     res.status(200).json({
         success: true,
@@ -127,6 +120,10 @@ export const updateMessage = asyncHandler(async (req: Request, res: Response) =>
     const { content } = req.body;
     const userId = req.user?.id;
 
+    if (!userId) {
+        throw new ApiError(401, "Unauthorized");
+    }
+
     const message = await Message.findById(id);
     if (!message) {
         throw new ApiError(404, "Message not found");
@@ -134,6 +131,10 @@ export const updateMessage = asyncHandler(async (req: Request, res: Response) =>
 
     if (!message.senderId.equals(userId)) {
         throw new ApiError(403, "You can only update your own messages")
+    }
+
+    if (!content || !content.trim()) {
+        throw new ApiError(400, "Message content cannot be empty");
     }
 
     if (message.messageType !== "text") {
@@ -149,10 +150,19 @@ export const updateMessage = asyncHandler(async (req: Request, res: Response) =>
         throw new ApiError(400, "You can only update message within 30 seconds of sending it");
     }
 
-    message.content = content;
+    message.content = content.trim();
     await message.save();
 
+
     const populatedUpdatedMessage = await message.populate("senderId", "username email");
+
+    // real time event
+    try {
+        const io = getIo();
+        io.to(message.chatId.toString()).emit("message:updated", populatedUpdatedMessage);
+    } catch (err) {
+        console.error("Socket emit error:", err);
+    }
 
     res.status(200).json({
         success: true,
