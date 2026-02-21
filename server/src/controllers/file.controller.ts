@@ -32,15 +32,20 @@ export const uploadFile = asyncHandler(async (req: Request, res: Response) => {
  * Download file
  */
 export const downloadFile = asyncHandler(async (req: Request, res: Response) => {
-    const filename = typeof req.params.filename === 'string' ? req.params.filename : req.params.filename?.[0];
+    const rawFilename = typeof req.params.filename === 'string' ? req.params.filename : req.params.filename?.[0];
 
-    if (!filename) {
+    if (!rawFilename) {
         throw new ApiError(400, "Filename is required");
     }
 
+
+    const filename = path.basename(rawFilename); // Prevent directory traversal
     const filePath = getLocalFilePath(filename);
 
-    if (!fs.existsSync(filePath)) {
+    // use async file check
+    try {
+        await fs.promises.access(filePath);
+    } catch {
         throw new ApiError(404, "File not found");
     }
 
@@ -56,42 +61,68 @@ export const downloadFile = asyncHandler(async (req: Request, res: Response) => 
  * Stream file
  */
 export const streamFile = asyncHandler(async (req: Request, res: Response) => {
-    const filename = typeof req.params.filename === 'string' ? req.params.filename : req.params.filename?.[0];
+    const rawFilename = typeof req.params.filename === 'string' ? req.params.filename : req.params.filename?.[0];
 
-    if (!filename) {
+    if (!rawFilename) {
         throw new ApiError(400, "Filename is required");
     }
 
+    const filename = path.basename(rawFilename); // security: sanitize stat
     const filePath = getLocalFilePath(filename);
 
-    if (!fs.existsSync(filePath)) {
-        throw new ApiError(404, "File not found");
+    // use async stat
+    let fileStats;
+    try {
+        fileStats = await fs.promises.stat(filePath);
+    } catch (error: any) {
+        if (error.code === "ENOENT") {
+            throw new ApiError(404, "File not found");
+        }
+        throw new ApiError(500, "Error accessing file");
     }
 
-    const stat = fs.statSync(filePath);
-    const ext = path.extname(filename).toLowerCase();
+    const totalSize = fileStats.size;
+    const fileExt = path.extname(filename).toLowerCase();
 
-    // Set appropriate content type based on file extension
-    let contentType = "application/octet-stream";
-    if ([".jpg", ".jpeg"].includes(ext)) contentType = "image/jpeg";
-    else if (ext === ".png") contentType = "image/png";
-    else if (ext === ".gif") contentType = "image/gif";
-    else if (ext === ".mp4") contentType = "video/mp4";
-    else if (ext === ".webm") contentType = "video/webm";
-    else if (ext === ".mp3") contentType = "audio/mpeg";
-    else if (ext === ".wav") contentType = "audio/wav";
-    else if (ext === ".pdf") contentType = "application/pdf";
+    //Determine MIME type
+    const mimeTypes: Record<string, string> = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.mp4': 'video/mp4',
+        '.webm': 'video/webm',
+        '.mp3': 'audio/mpeg',
+        '.wav': 'audio/wav',
+        '.pdf': 'application/pdf'
+    }
+    const contentType = mimeTypes[fileExt] || "application/octet-stream";
+
+    // handle range requests for video/audio streaming
+    const range = req.headers.range;
+
+    let rangeStart = 0;
+    let rangeEnd = totalSize - 1;
+    let contentLength = totalSize;
+
+    if (range) {
+        const rangeParts = range.replace(/bytes=/, "").split("-");
+        rangeStart = parseInt(rangeParts[0], 10);
+        rangeEnd = rangeParts[1] ? parseInt(rangeParts[1], 10) : totalSize - 1;
+        contentLength = rangeEnd - rangeStart + 1;
+    }
 
     res.writeHead(200, {
-        "Content-Type": contentType,
-        "Content-Length": stat.size,
+        "Content-Range": `bytes ${rangeStart}-${rangeEnd}/${totalSize}`,
         "Accept-Ranges": "bytes",
+        "Content-Length": contentLength,
+        "Content-Type": contentType,
     });
 
-    const readStream = fs.createReadStream(filePath);
-    readStream.pipe(res);
+    const fileStream = fs.createReadStream(filePath, { start: rangeStart, end: rangeEnd });
+    fileStream.pipe(res);
 
-    readStream.on("error", () => {
+    fileStream.on("error", () => {
         throw new ApiError(500, "Error streaming file");
     });
 });
@@ -100,15 +131,18 @@ export const streamFile = asyncHandler(async (req: Request, res: Response) => {
  * Delete file
  */
 export const deleteFile = asyncHandler(async (req: Request, res: Response) => {
-    const filename = typeof req.params.filename === 'string' ? req.params.filename : req.params.filename?.[0];
+    const rawFilename = typeof req.params.filename === 'string' ? req.params.filename : req.params.filename?.[0];
 
-    if (!filename) {
+    if (!rawFilename) {
         throw new ApiError(400, "Filename is required");
     }
 
+    const filename = path.basename(rawFilename); // Prevent directory traversal
     const filePath = getLocalFilePath(filename);
 
-    if (!fs.existsSync(filePath)) {
+    try {
+        await fs.promises.access(filePath);
+    } catch {
         throw new ApiError(404, "File not found");
     }
 
@@ -124,28 +158,30 @@ export const deleteFile = asyncHandler(async (req: Request, res: Response) => {
  * Get file metadata
  */
 export const getFileMetadata = asyncHandler(async (req: Request, res: Response) => {
-    const filename = typeof req.params.filename === 'string' ? req.params.filename : req.params.filename?.[0];
+    const rawFilename = typeof req.params.filename === 'string' ? req.params.filename : req.params.filename?.[0];
 
-    if (!filename) {
+    if (!rawFilename) {
         throw new ApiError(400, "Filename is required");
     }
 
+    const filename = path.basename(rawFilename); // Prevent directory traversal
     const filePath = getLocalFilePath(filename);
 
-    if (!fs.existsSync(filePath)) {
+    let fileStats;
+    try {
+        fileStats = await fs.promises.stat(filePath);
+    } catch {
         throw new ApiError(404, "File not found");
     }
-
-    const stat = fs.statSync(filePath);
 
     res.status(200).json({
         success: true,
         data: {
             filename,
-            size: stat.size,
+            size: fileStats.size,
             contentType: path.extname(filename),
-            createdAt: stat.birthtime,
-            modifiedAt: stat.mtime,
+            createdAt: fileStats.birthtime,
+            modifiedAt: fileStats.mtime,
         },
     });
 });
