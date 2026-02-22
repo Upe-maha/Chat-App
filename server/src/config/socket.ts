@@ -2,7 +2,6 @@ import { Server } from "socket.io";
 import http from "http"
 import { socketAuthMiddleware } from "../middlewares/socket.middleware";
 import Chat from "../models/Chat";
-import Message from "../models/Message";
 import { createMessage } from "../services/message.service";
 
 let io: Server | null = null;
@@ -18,14 +17,14 @@ export const initSocket = (server: http.Server) => {
     io.use(socketAuthMiddleware);
 
     io.on("connection", (socket) => {
-        console.log("Client connected: ", socket.id);
+        console.log(`[Socket] Client connected: ${socket.id} | User: ${socket.data.userId}`);
 
         socket.on("join:chat", async (chatId: string) => {
             if (!chatId) return;
 
             const chat = await Chat.findOne({
                 _id: chatId,
-                participents: socket.data.userId,
+                participants: socket.data.userId,
             });
             if (!chat) return;
 
@@ -45,36 +44,57 @@ export const initSocket = (server: http.Server) => {
             }
         });
 
+        socket.on("stopTyping", (chatId: string) => {
+            if (chatId) {
+                socket.to(chatId).emit("stopTyping", {
+                    chatId,
+                    userId: socket.data.userId,
+                })
+            }
+        })
+
         socket.on("message:send", async (data) => {
             try {
-                const { chatId, content, messageType = "text", fileId } = data;
+                const { chatId, content, messageType = "text", fileUrl, fileName, fileSize, fileMimeType } = data;
 
-                // if (!chatId) return;
+                if (!chatId) {
+                    return socket.emit("message:error", {
+                        error: "chatId is required",
+                    });
+                };
 
-                // const chat = await Chat.findOne({
-                //     _id: chatId,
-                //     participants: socket.data.userId,
-                // });
+                const chat = await Chat.findOne({
+                    _id: chatId,
+                    participants: socket.data.userId,
+                });
 
-                // if (!chat) return;
+                if (!chat) {
+                    return socket.emit("message:error", {
+                        error: "You are not a participant of this chat",
+                    })
+                }
 
-                // if (messageType === "Text" && !content) return;
+                if (messageType === "text" && (!content || !content.trim())) {
+                    return socket.emit("message:error", {
+                        error: "Message content cannot be empty",
+                    });
+                };
 
-                // if (["image", "video", " audio", "file"].includes(messageType) && !fileId) return;
+                if (["image", "video", "audio", "file"].includes(messageType) && !fileUrl) {
+                    return socket.emit("message:error", {
+                        error: "File URL is required for this message type",
+                    });
+                }
 
-                // const message = await Message.create({
-                //     chatId,
-                //     senderId: socket.data.userId,
-                //     content: content || `File: ${fileId}`,
-                //     messageType,
-                //     fileId: fileId || undefined,
-                // });
                 const populatedServiceMessage = await createMessage({
                     chatId,
                     senderId: socket.data.userId,
                     content,
                     messageType,
-                    fileId,
+                    fileUrl,
+                    fileName,
+                    fileSize,
+                    fileMimeType,
                 });
 
                 socket.to(chatId).emit("message:new", populatedServiceMessage);
@@ -82,12 +102,12 @@ export const initSocket = (server: http.Server) => {
             }
             catch (err) {
                 socket.emit("message:error", {
-                    error: "filed to send message:" + err,
+                    error: `Failed to send message: ${err}`,
                 });
             }
         });
         socket.on("disconnect", () => {
-            console.log("Client disconnected: ", socket.id);
+            console.log(`[Socket] Client disconnected: ${socket.id} | User: ${socket.data.userId}`);
         });
     });
 
