@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@config "../../tailwind.config.ts";
 
 /* Define CSS variables for colors using HSL values */
 
@@ -10,7 +11,7 @@
 
   /* UI Tokens - Light */
   --background: 0 0% 100%;         /* #FFFFFF */
- --foreground: 222 47% 11%;          /* #1E293B */
+  --foreground: 222 47% 11%;          /* #1E293B */
 
   --card: 0 0% 98%;              /* #F8FAFC */
   --card-foreground: 222 47% 11%;    /* #1E293B */
@@ -18,12 +19,14 @@
   --muted: 210 16% 93%;           /* #F1F5F9 */
   --muted-foreground: 215 20% 35%; /* #475569 */
 
+  --warning: 38 92% 60%;
+  --warning-foreground: 0 0% 100%;
 
   --border: 214 32% 91%;           /* #E5E7EB */
   --input: 214 32% 91%;            /* #E5E7EB */
   --ring: 262 83% 58%;             /* #7C3AED */
 
-   --primary-foreground: 0 0% 100%;  /* #FFFFFF */
+  --primary-foreground: 0 0% 100%;  /* #FFFFFF */
   --secondary-foreground: 0 0% 100%; /* #FFFFFF */
   --accent-foreground: 0 0% 100%; /* #FFFFFF */
 
@@ -45,6 +48,9 @@
 
   --muted: 217 33% 20%;
   --muted-foreground: 215 20% 70%;
+
+  --warning: 38 92% 60%;
+  --warning-foreground: 0 0% 100%;
 
   --border: 217 33% 20%;
   --input: 217 33% 20%;
