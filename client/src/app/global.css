@@ -1,95 +1,247 @@
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
 
-/* Define CSS variables for colors using HSL values */
+/* ═══════════════════════════════════════════════════════════════
+   CSS Variables (HSL values without hsl() wrapper)
+   ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Brand Colors */
-  --primary: 262 83% 58%;           /* #7C3AED */
-  --secondary: 189 94% 43%;         /* #06B6D4 */
-  --accent: 158 64% 45%;            /* #10B981 */
+    /* Brand Colors */
+    --primary: 262 83% 58%;  
+    --primary-foreground: 0 0% 100%;
 
-  /* UI Tokens - Light */
-  --background: 0 0% 100%;         /* #FFFFFF */
-  --foreground: 222 47% 11%;          /* #1E293B */
+    --secondary: 189 94% 43%;
+    --secondary-foreground: 0 0% 100%;
 
-  --card: 0 0% 98%;              /* #F8FAFC */
-  --card-foreground: 222 47% 11%;    /* #1E293B */
+    --accent: 158 64% 45%;
+    --accent-foreground: 0 0% 100%;
 
-  --muted: 210 16% 93%;           /* #F1F5F9 */
-  --muted-foreground: 215 20% 35%; /* #475569 */
+    /* UI Tokens - Light */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
 
-  --warning: 38 92% 60%;
-  --warning-foreground: 0 0% 100%;
+    --card: 0 0% 98%;
+    --card-foreground: 222 47% 11%;
 
-  --border: 214 32% 91%;           /* #E5E7EB */
-  --input: 214 32% 91%;            /* #E5E7EB */
-  --ring: 262 83% 58%;             /* #7C3AED */
+    --muted: 210 16% 93%;
+    --muted-foreground: 215 20% 35%;
 
-  --primary-foreground: 0 0% 100%;  /* #FFFFFF */
-  --secondary-foreground: 0 0% 100%; /* #FFFFFF */
-  --accent-foreground: 0 0% 100%; /* #FFFFFF */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-  --radius: 12px;
+    --warning: 38 92% 60%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 262 83% 58%;
+
+    --radius: 0.75rem;
 }
 
 .dark {
-  /* Brand Colors (slightly brighter for dark mode) */
-  --primary: 262 83% 68%;
-  --secondary: 189 94% 55%;
-  --accent: 158 64% 55%;
+    /* Brand Colors */
+    --primary: 262 83% 68%;
+    --primary-foreground: 0 0% 100%;
 
-  /* UI Tokens - Dark */
-  --background: 222 47% 7%;
-  --foreground: 210 40% 98%;
+    --secondary: 189 94% 55%;
+    --secondary-foreground: 0 0% 100%;
 
-  --card: 222 47% 11%;
-  --card-foreground: 210 40% 98%;
+    --accent: 158 64% 55%;
+    --accent-foreground: 0 0% 100%;
 
-  --muted: 217 33% 20%;
-  --muted-foreground: 215 20% 70%;
+    /* UI Tokens - Dark */
+    --background: 222 47% 7%;
+    --foreground: 210 40% 98%;
 
-  --warning: 38 92% 60%;
-  --warning-foreground: 0 0% 100%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
 
-  --border: 217 33% 20%;
-  --input: 217 33% 20%;
-  --ring: 262 83% 68%;
+    --muted: 217 33% 20%;
+    --muted-foreground: 215 20% 70%;
 
-  --primary-foreground: 0 0% 100%;
-  --secondary-foreground: 0 0% 100%;
-  --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --warning: 38 92% 60%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 262 83% 68%;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* ═══════════════════════════════════════════════════════════════
+   Tailwind v4 Theme Mapping
+   This tells Tailwind to create utility classes from our variables
+   ═══════════════════════════════════════════════════════════════ */
+
+@theme inline {
+    /* Colors */
+    --color-background: hsl(var(--background));
+    --color-foreground: hsl(var(--foreground));
+
+    --color-card: hsl(var(--card));
+    --color-card-foreground: hsl(var(--card-foreground));
+
+    --color-primary: hsl(var(--primary));
+    --color-primary-foreground: hsl(var(--primary-foreground));
+
+    --color-secondary: hsl(var(--secondary));
+    --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+    --color-accent: hsl(var(--accent));
+    --color-accent-foreground: hsl(var(--accent-foreground));
+
+    --color-muted: hsl(var(--muted));
+    --color-muted-foreground: hsl(var(--muted-foreground));
+
+    --color-destructive: hsl(var(--destructive));
+    --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+    --color-warning: hsl(var(--warning));
+    --color-warning-foreground: hsl(var(--warning-foreground));
+
+    --color-border: hsl(var(--border));
+    --color-input: hsl(var(--input));
+    --color-ring: hsl(var(--ring));
+
+    /* Border Radius */
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --radius-2xl: calc(var(--radius) + 8px);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
-html {
-  scroll-behavior: smooth;
+/* ═══════════════════════════════════════════════════════════════
+   Base Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+@layer base {
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        border-color: hsl(var(--border));
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        background: hsl(var(--background));
+        color: hsl(var(--foreground));
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Focus styles for accessibility */
+    :focus-visible {
+        outline: 2px solid hsl(var(--ring));
+        outline-offset: 2px;
+    }
+
+    /* Selection highlight */
+    ::selection {
+        background: hsl(var(--primary) / 0.2);
+        color: hsl(var(--foreground));
+    }
 }
 
-body {
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
-  font-family: system-ui, -apple-system, sans-serif;
-  min-height: 100vh;
+/* ═══════════════════════════════════════════════════════════════
+   Custom Scrollbar
+   ═══════════════════════════════════════════════════════════════ */
+
+@layer base {
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: hsl(var(--background));
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: hsl(var(--muted));
+        border-radius: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: hsl(var(--muted-foreground) / 0.5);
+    }
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* ═══════════════════════════════════════════════════════════════
+   Custom Utility Classes
+   ═══════════════════════════════════════════════════════════════ */
+
+@layer utilities {
+    /* Primary gradient text */
+    .text-gradient-primary {
+        background: linear-gradient(to right, #9333ea, #8b5cf6, #6366f1);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    /* Alternative: Using HSL variables */
+    .text-gradient-brand {
+        background: linear-gradient(
+            to right,
+            hsl(var(--primary)),
+            hsl(var(--secondary)),
+            hsl(var(--accent))
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    /* Background gradient (for buttons, cards, etc.) */
+    .bg-gradient-primary {
+        background: linear-gradient(to right, #9333ea, #8b5cf6, #6366f1);
+    }
+
+    .bg-gradient-secondary {
+        background: linear-gradient(
+            to right, 
+            hsl(var(--secondary) / var(--tw-bg-opacity, 1)), 
+            hsl(var(--card) / var(--tw-bg-opacity, 1)), 
+            hsl(var(--accent) / var(--tw-bg-opacity, 1))
+        );
+    }
+
+    /* Animated gradient (optional - fancy effect) */
+    .text-gradient-animated {
+        background: linear-gradient(
+            270deg,
+            #9333ea,
+            #8b5cf6,
+            #6366f1,
+            #8b5cf6,
+            #9333ea
+        );
+        background-size: 200% 200%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: gradient-shift 5s ease infinite;
+    }
+
+    @keyframes gradient-shift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
 }
-::-webkit-scrollbar-track {
-  background: hsl(var(--background));
-}
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted));
-  border-radius: 8px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--border));
-}
+
