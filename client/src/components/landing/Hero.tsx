@@ -21,7 +21,7 @@ export default function Hero() {
             {/* Headline */}
             <h1 className="mx-auto max-w-4xl text-4xl font-extrabold leading-tight tracking-tight text-foreground sm:text-5xl md:text-7xl">
                 Connect.{" "}
-                <span className="text-gradient-primary">
+                <span className="text-gradient-brand">
                     Collaborate.
                 </span>
                 <br />

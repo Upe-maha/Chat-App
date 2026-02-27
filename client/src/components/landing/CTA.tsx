@@ -4,7 +4,7 @@ export default function CTA() {
     return (
         <section id="pricing" className="px-4 pb-20">
             <div className="mx-auto max-w-6xl">
-                <div className="rounded-3xl border border-border bg-linear-to-br from-secondary/50 via-card to-secondary/30 px-6 py-16 text-center shadow-sm sm:px-12">
+                <div className="rounded-3xl border border-border bg-gradient-surface px-6 py-16 text-center shadow-sm sm:px-12">
                     {/* Headline */}
                     <h3 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">
                         Ready to find your vibe?
