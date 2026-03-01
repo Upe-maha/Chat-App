@@ -1,3 +1,4 @@
+import RegisterPage from "@/components/auth/Register";
 import Link from "next/link";
 
 export default function AuthLayout({
@@ -20,7 +21,7 @@ export default function AuthLayout({
                     </span>
                 </Link>
 
-                {children}
+                <RegisterPage />
 
                 <p className="mt-6 text-center text-sm text-muted-foreground">
                     <Link href="/" className="hover:text-foreground hover:underline">
