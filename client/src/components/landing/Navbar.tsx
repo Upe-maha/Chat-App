@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { MessageSquare, Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
+import Brand from "@/components/shared/Brand";
 
 const navLinks = [
     { href: "#features", label: "Features" },
-    { href: "#pricing", label: "Pricing" },
-    { href: "/login", label: "Login" },
+    { href: "#solutions", label: "Solutions" },
 ];
 
 export default function Navbar() {
@@ -42,12 +42,7 @@ export default function Navbar() {
             <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
                 <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
                     {/* Logo */}
-                    <Link href="/" className="flex items-center gap-2">
-                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                            <MessageSquare className="h-4 w-4 text-primary-foreground" />
-                        </span>
-                        <span className="text-lg font-bold text-foreground">Vibe</span>
-                    </Link>
+                    <Brand />
 
                     {/* Desktop Nav */}
                     <nav className="hidden items-center gap-8 text-sm md:flex">
@@ -60,6 +55,12 @@ export default function Navbar() {
                                 {link.label}
                             </Link>
                         ))}
+                        <Link
+                            href="/login"
+                            className="text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                            Log in
+                        </Link>
                         <Link
                             href="/register"
                             className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
@@ -110,16 +111,7 @@ function MobileMenu({
                 <div className="flex h-full flex-col">
                     {/* Header */}
                     <div className="flex h-16 items-center justify-between border-b border-border px-4">
-                        <Link
-                            href="/"
-                            onClick={onClose}
-                            className="flex items-center gap-2"
-                        >
-                            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                                <MessageSquare className="h-4 w-4 text-primary-foreground" />
-                            </span>
-                            <span className="text-lg font-bold text-foreground">Vibe</span>
-                        </Link>
+                        <Brand onClick={onClose} />
                         <button
                             onClick={onClose}
                             className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary"
@@ -161,6 +153,15 @@ function MobileMenu({
                                     </Link>
                                 </li>
                             ))}
+                            <li>
+                                <Link
+                                    href="/login"
+                                    onClick={onClose}
+                                    className="flex h-12 items-center rounded-lg px-4 text-base font-medium text-foreground transition-colors hover:bg-secondary"
+                                >
+                                    Log in
+                                </Link>
+                            </li>
                         </ul>
                     </nav>
 

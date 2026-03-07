@@ -11,62 +11,63 @@ const chatMessages = [
 
 export default function Hero() {
     return (
-        <section className="mx-auto max-w-6xl px-4 pb-16 pt-16 text-center md:pt-24">
-            {/* Badge */}
-            <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
-                v2.0 is now live
-            </div>
+        <section className="mx-auto max-w-6xl px-4 pb-20 pt-12 md:pt-20">
+            <div className="grid items-center gap-10 md:grid-cols-2">
+                <div className="text-left">
+                    <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                        NEW: AI summaries 2.0
+                    </div>
 
-            {/* Headline */}
-            <h1 className="mx-auto max-w-4xl text-4xl font-extrabold leading-tight tracking-tight text-foreground sm:text-5xl md:text-7xl">
-                Connect.{" "}
-                <span className="text-gradient-brand">
-                    Collaborate.
-                </span>
-                <br />
-                Chat.
-            </h1>
+                    <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-foreground sm:text-5xl md:text-6xl">
+                        Connect Smarter with{" "}
+                        <span className="text-gradient-brand">HateaChat</span>
+                    </h1>
 
-            {/* Subtitle */}
-            <p className="mx-auto mt-6 max-w-2xl text-base text-muted-foreground sm:text-lg">
-                Experience the seamless way to keep your team in sync. Fast,
-                secure, and designed for modern collaboration.
-            </p>
+                    <p className="mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
+                        Secure, real-time messaging for modern teams — with helpful
+                        AI features that keep conversations clear and actionable.
+                    </p>
 
-            {/* CTA Buttons */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                <Link
-                    href="/register"
-                    className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/30"
-                >
-                    Get Started
-                    <ArrowRight className="h-4 w-4" />
-                </Link>
-                <button className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-7 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary">
-                    <Play className="h-4 w-4" />
-                    Watch Demo
-                </button>
-            </div>
+                    <div className="mt-8 flex flex-wrap items-center gap-3">
+                        <Link
+                            href="/register"
+                            className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90"
+                        >
+                            Start for Free
+                            <ArrowRight className="h-4 w-4" />
+                        </Link>
+                        <button className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-7 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary">
+                            <Play className="h-4 w-4" />
+                            Watch Demo
+                        </button>
+                    </div>
 
-            {/* Chat Preview */}
-            <div className="mx-auto mt-14 max-w-3xl">
-                <div className="overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-rose-100/50 via-background to-violet-100/50 p-3 shadow-2xl sm:p-5">
-                    <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                        {/* Chat Header */}
-                        <div className="mb-4 flex items-center gap-3 border-b border-border pb-3">
-                            <div className="h-9 w-9 rounded-full bg-primary/20" />
-                            <div className="text-left">
-                                <p className="text-sm font-medium text-foreground">Team Chat</p>
-                                <p className="text-xs text-muted-foreground">5 members online</p>
-                            </div>
+                    <div className="mt-6 flex items-center gap-3 text-sm text-muted-foreground">
+                        <div className="flex -space-x-2">
+                            <div className="h-6 w-6 rounded-full bg-muted" />
+                            <div className="h-6 w-6 rounded-full bg-muted" />
+                            <div className="h-6 w-6 rounded-full bg-muted" />
                         </div>
+                        <span>Trusted by modern teams</span>
+                    </div>
+                </div>
 
-                        {/* Messages */}
-                        <div className="space-y-3">
-                            {chatMessages.map((msg, i) => (
-                                <ChatBubble key={i} text={msg.text} sent={msg.sent} />
-                            ))}
+                <div className="mx-auto w-full max-w-xl">
+                    <div className="rounded-3xl border border-border bg-gradient-surface p-6 shadow-xl">
+                        <div className="mx-auto w-full max-w-sm rounded-2xl border border-border bg-card p-4 shadow-sm">
+                            <div className="mb-4 flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-semibold text-foreground">HateaChat</p>
+                                    <p className="text-xs text-muted-foreground">Highlights</p>
+                                </div>
+                                <div className="h-8 w-8 rounded-full bg-primary/15" />
+                            </div>
+                            <div className="space-y-3">
+                                {chatMessages.slice(0, 4).map((msg, i) => (
+                                    <ChatBubble key={i} text={msg.text} sent={msg.sent} />
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>

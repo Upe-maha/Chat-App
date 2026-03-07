@@ -34,16 +34,15 @@ const features: Feature[] = [
 
 export default function Features() {
     return (
-        <section id="features" className="py-20">
+        <section id="features" className="py-20 bg-background">
             <div className="mx-auto max-w-6xl px-4">
-                {/* Section Header */}
-                <div className="text-center">
-                    <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-                        Why Choose Vibe?
-                    </h2>
-                    <p className="mt-3 text-muted-foreground">
-                        Everything you need to collaborate effectively, all in one place.
+                <div className="max-w-2xl">
+                    <p className="text-xs font-semibold tracking-wider text-primary">
+                        WHY CHOOSE HATEACHAT?
                     </p>
+                    <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                        Everything you need to lead with clarity.
+                    </h2>
                 </div>
 
                 {/* Feature Cards */}
