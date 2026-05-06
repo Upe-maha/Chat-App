@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
+import path from "path";
 import asyncHandler from "../utils/asyncHandler";
 import User from "../models/User";
 import ApiError from "../utils/ApiError";
+import { saveFileToLocal } from "../services/storage.service";
+import { storageConfig } from "../config/storage.config";
 
 
 
@@ -125,3 +128,42 @@ export const deletUser = asyncHandler(async (req: Request, res: Response) => {
         data: null,
     })
 })
+
+// Update user profile picture
+export const updateProfilePicture = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const { id } = req.params;
+
+    if (!userId) {
+        throw new ApiError(401, "Unauthorized");
+    }
+
+    if (id && id !== userId) {
+        throw new ApiError(403, "You can only update your own profile picture");
+    }
+
+    if (!req.file) {
+        throw new ApiError(400, "No profile picture uploaded");
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    const fileExt = path.extname(req.file.originalname).toLowerCase();
+    const fileName = `profile-${Date.now()}${fileExt || ""}`;
+    const subPath = path.join(storageConfig.local.folder.profilePictures, userId);
+    const profilePictureUrl = await saveFileToLocal(req.file, { subPath, fileName });
+
+    user.profilePicture = profilePictureUrl;
+    await user.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Profile picture updated successfully",
+        data: {
+            profilePicture: profilePictureUrl,
+        },
+    });
+});

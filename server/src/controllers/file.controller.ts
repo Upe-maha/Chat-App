@@ -5,6 +5,14 @@ import ApiError from "../utils/ApiError";
 import fs from "fs";
 import path from "path";
 
+const getRelativeFilePath = (req: Request): string => {
+    const rawPath = typeof req.params.filePath === "string" ? req.params.filePath : req.params.filePath?.[0];
+    if (!rawPath) {
+        throw new ApiError(400, "File path is required");
+    }
+    return rawPath;
+};
+
 /**
  * Upload file
  */
@@ -32,15 +40,9 @@ export const uploadFile = asyncHandler(async (req: Request, res: Response) => {
  * Download file
  */
 export const downloadFile = asyncHandler(async (req: Request, res: Response) => {
-    const rawFilename = typeof req.params.filename === 'string' ? req.params.filename : req.params.filename?.[0];
-
-    if (!rawFilename) {
-        throw new ApiError(400, "Filename is required");
-    }
-
-
-    const filename = path.basename(rawFilename); // Prevent directory traversal
-    const filePath = getLocalFilePath(filename);
+    const relativePath = getRelativeFilePath(req);
+    const filePath = getLocalFilePath(relativePath);
+    const filename = path.basename(relativePath);
 
     // use async file check
     try {
@@ -61,14 +63,8 @@ export const downloadFile = asyncHandler(async (req: Request, res: Response) => 
  * Stream file
  */
 export const streamFile = asyncHandler(async (req: Request, res: Response) => {
-    const rawFilename = typeof req.params.filename === 'string' ? req.params.filename : req.params.filename?.[0];
-
-    if (!rawFilename) {
-        throw new ApiError(400, "Filename is required");
-    }
-
-    const filename = path.basename(rawFilename); // security: sanitize stat
-    const filePath = getLocalFilePath(filename);
+    const relativePath = getRelativeFilePath(req);
+    const filePath = getLocalFilePath(relativePath);
 
     // use async stat
     let fileStats;
@@ -82,7 +78,7 @@ export const streamFile = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const totalSize = fileStats.size;
-    const fileExt = path.extname(filename).toLowerCase();
+    const fileExt = path.extname(relativePath).toLowerCase();
 
     //Determine MIME type
     const mimeTypes: Record<string, string> = {
@@ -131,14 +127,8 @@ export const streamFile = asyncHandler(async (req: Request, res: Response) => {
  * Delete file
  */
 export const deleteFile = asyncHandler(async (req: Request, res: Response) => {
-    const rawFilename = typeof req.params.filename === 'string' ? req.params.filename : req.params.filename?.[0];
-
-    if (!rawFilename) {
-        throw new ApiError(400, "Filename is required");
-    }
-
-    const filename = path.basename(rawFilename); // Prevent directory traversal
-    const filePath = getLocalFilePath(filename);
+    const relativePath = getRelativeFilePath(req);
+    const filePath = getLocalFilePath(relativePath);
 
     try {
         await fs.promises.access(filePath);
@@ -146,7 +136,7 @@ export const deleteFile = asyncHandler(async (req: Request, res: Response) => {
         throw new ApiError(404, "File not found");
     }
 
-    await deleteLocalFile(filename);
+    await deleteLocalFile(relativePath);
 
     res.status(200).json({
         success: true,
@@ -158,14 +148,9 @@ export const deleteFile = asyncHandler(async (req: Request, res: Response) => {
  * Get file metadata
  */
 export const getFileMetadata = asyncHandler(async (req: Request, res: Response) => {
-    const rawFilename = typeof req.params.filename === 'string' ? req.params.filename : req.params.filename?.[0];
-
-    if (!rawFilename) {
-        throw new ApiError(400, "Filename is required");
-    }
-
-    const filename = path.basename(rawFilename); // Prevent directory traversal
-    const filePath = getLocalFilePath(filename);
+    const relativePath = getRelativeFilePath(req);
+    const filePath = getLocalFilePath(relativePath);
+    const filename = path.basename(relativePath);
 
     let fileStats;
     try {

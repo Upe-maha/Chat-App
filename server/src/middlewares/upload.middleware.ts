@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { upload } from "../config/upload";
+import { upload, imageUpload } from "../config/upload";
 import ApiError from "../utils/ApiError";
 
 /**
@@ -20,6 +20,18 @@ export const uploadMiddleware = (req: Request, res: Response, next: NextFunction
  */
 export const uploadMultipleMiddleware = (req: Request, res: Response, next: NextFunction) => {
     upload.array("files", 10)(req, res, (err) => { // Max 10 files
+        if (err) {
+            return next(new ApiError(400, err.message));
+        }
+        next();
+    });
+};
+
+/**
+ * Middleware to handle profile picture upload
+ */
+export const uploadProfilePictureMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    imageUpload.single("profilePicture")(req, res, (err) => {
         if (err) {
             return next(new ApiError(400, err.message));
         }

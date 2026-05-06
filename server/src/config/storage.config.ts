@@ -2,11 +2,17 @@ import path from "path";
 import fs from "fs";
 import ApiError from "../utils/ApiError";
 
+
 const isProduction = process.env.NODE_ENV === "production";
 
 export const storageConfig = {
     local: {
-        path: path.resolve(process.cwd(), "uploads"),
+        basePath: path.resolve(process.cwd(), "uploads"),
+        folder: {
+            profilePictures: "profile-pictures",
+            fileURLToPath: "files",
+        }
+
     },
     cloud: {
         provider: "s3", // future use
@@ -15,7 +21,7 @@ export const storageConfig = {
     },
 };
 
-export const getStoragePath = () => {
+export const getStoragePath = (subPath?: string) => {
     if (isProduction) {
         if (!storageConfig.cloud.bucket) {
             throw new ApiError(500, "Cloud storage is not configured");
@@ -23,7 +29,9 @@ export const getStoragePath = () => {
         return storageConfig.cloud.bucket;
     }
 
-    const uploadPath = storageConfig.local.path;
+    const uploadPath = subPath
+        ? path.join(storageConfig.local.basePath, subPath)
+        : storageConfig.local.basePath;
 
     // Ensure directory exists (VERY IMPORTANT)
     if (!fs.existsSync(uploadPath)) {

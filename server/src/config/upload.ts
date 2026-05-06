@@ -60,3 +60,19 @@ export const upload = multer({
         }
     }
 })
+
+export const imageUpload = multer({
+    storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5 MB max file size
+        files: 1,
+    },
+    fileFilter: (req: Express.Request, file: Express.Multer.File, cd: multer.FileFilterCallback) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (IMAGE_MIME_TYPES.includes(file.mimetype) && allowedExtensions.includes(ext)) {
+            cd(null, true);
+        } else {
+            cd(new Error(`Unsupported image type: ${file.mimetype}`));
+        }
+    }
+});
