@@ -28,12 +28,17 @@ export const authMiddleware = asyncHandler(
             throw new ApiError(401, "Access token is missing")
         }
 
-        const paylod = verifyAccessToken(token);
+        let payload;
+        try {
+            payload = verifyAccessToken(token);
+        } catch (error) {
+            throw new ApiError(401, "Invalid or expired access token");
+        }
 
         req.user = {
-            id: paylod.id,
-            username: paylod.username,
-            email: paylod.email,
+            id: payload.id,
+            username: payload.username,
+            email: payload.email,
         }
 
         next();

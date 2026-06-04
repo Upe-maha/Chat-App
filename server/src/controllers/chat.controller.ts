@@ -10,14 +10,17 @@ export const createChat = asyncHandler(async (req: Request, res: Response) => {
     if (!name || !participants || participants.length === 0) {
         throw new ApiError(400, "Name and participants are required to create a chat");
     }
+    const participantIds = Array.isArray(participants)
+        ? [...participants]
+        : [];
 
-    if (!participants.includes(userId)) {
-        participants.push(userId);
+    if (!participantIds.includes(userId)) {
+        participantIds.push(userId);
     }
 
     const chat = await Chat.create({
         name: name || "Direct Message",
-        participants,
+        participants: participantIds,
         createdBy: userId,
         description,
         isGroup: isGroup || false,

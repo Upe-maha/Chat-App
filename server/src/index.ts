@@ -2,11 +2,30 @@ import app from './app';
 import connectDB from './config/database';
 import dotenv from "dotenv";
 import http from "http";
-import { initSocket } from './config/socket';
+import { getIo, initSocket } from './config/socket';
 
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
+let server: http.Server | null = null;
+
+const shutdown = (signal: string) => {
+    console.log(`Shutting down on ${signal}`);
+    try {
+        getIo().close();
+    } catch {
+        // Socket not initialized yet or already closed.
+    }
+
+    if (server) {
+        server.close(() => process.exit(0));
+    } else {
+        process.exit(0);
+    }
+}
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
 
 // Start the server
 const startServer = async () => {
@@ -14,7 +33,7 @@ const startServer = async () => {
 
         await connectDB();
         // socket.io need the http server instance to establish WebSocket connections, so we create the server using the Express app and then pass it to socket.io
-        const server = http.createServer(app);
+        server = http.createServer(app);
         initSocket(server);
 
         // start http server that can handel both http and websocket connections
