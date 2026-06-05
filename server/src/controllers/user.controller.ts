@@ -143,7 +143,7 @@ export const updateProfilePicture = asyncHandler(async (req: Request, res: Respo
     }
 
     if (!req.file) {
-        throw new ApiError(400, "No profile picture uploaded");
+        throw new ApiError(400, "No profile picture file not found in the request");
     }
 
     const user = await User.findById(userId);

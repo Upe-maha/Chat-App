@@ -13,6 +13,7 @@ router.get("/", getAllUsers);
 router.get("/:id", getUserById);
 
 //Protected routes (auth.middleware.ts)
+router.post("/:id/profile-picture", authMiddleware, uploadProfilePictureMiddleware, updateProfilePicture);
 router.put("/:id/profile-picture", authMiddleware, uploadProfilePictureMiddleware, updateProfilePicture);
 router.put("/:id", authMiddleware, updateUser);
 router.delete("/:id", authMiddleware, deletUser);

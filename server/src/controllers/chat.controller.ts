@@ -4,40 +4,64 @@ import asyncHandler from "../utils/asyncHandler";
 import { Request, Response } from "express";
 
 export const createChat = asyncHandler(async (req: Request, res: Response) => {
-    const { name, description, participants, isGroup } = req.body;
+    const { name, description, participants = [], isGroup } = req.body;
     const userId = req.user?.id;
 
-    if (!name || !participants || participants.length === 0) {
-        throw new ApiError(400, "Name and participants are required to create a chat");
-    }
-    const participantIds = Array.isArray(participants)
-        ? [...participants]
-        : [];
-
-    if (!participantIds.includes(userId)) {
-        participantIds.push(userId);
+    if (!Array.isArray(participants) || participants.length === 0) {
+        throw new ApiError(400, "Participants must be a non-empty array");
     }
 
-    const chat = await Chat.create({
+    const uniqueParticipants = [
+        ...new Set([...participants, userId]),
+    ];
+
+    const isGroupChat =
+        String(isGroup) === "true" || uniqueParticipants.length > 2;
+
+    if (!isGroupChat) {
+        const existingChat = await Chat.findOne({
+            isGroup: false,
+            participants: {
+                $all: uniqueParticipants,
+                $size: uniqueParticipants.length,
+            },
+        });
+
+        if (existingChat) {
+            res.status(200).json({
+                success: true,
+                message: "Chat already exists",
+                data: existingChat,
+            });
+            return;
+        }
+    }
+
+    const chat: any = await Chat.create({
         name: name || "Direct Message",
-        participants: participantIds,
+        participants: uniqueParticipants,
         createdBy: userId,
         description,
-        isGroup: isGroup || false,
-    })
+        isGroup: isGroupChat,
+    });
 
-    // const populatedChat = await chat.populate("participants", "username email");
-    // const chatResponse = await chat.populate("createdBy", "username email");
-    // or we can do like this: Chain populate calls => more cleaner
-    const populatedChat = await chat
-        .populate("participants", "username email")
-        .then(() => chat.populate("createdBy", "username email"));
+    await chat.populate([
+        {
+            path: "participants",
+            select: "username email",
+        },
+        {
+            path: "createdBy",
+            select: "username email",
+        },
+    ]);
 
     res.status(201).json({
         success: true,
         message: "Chat created successfully",
-        data: populatedChat,
+        data: chat,
     });
+    return;
 });
 
 // get all chats for a user
