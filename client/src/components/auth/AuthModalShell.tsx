@@ -65,7 +65,7 @@ export default function AuthModalShell({
                     </button>
 
                     <div className="flex flex-col items-center mb-6 mt-6 sm:mt-0">
-                        <Brand showName={false} markSize={48} className="inline-flex" />
+                        <Brand showName={false} markSize={48} className="inline-flex" onClick={close} />
 
                         <h1 className="text-xl font-semibold mt-4">HateaChat</h1>
                         <p className="text-lg font-medium">{title}</p>
